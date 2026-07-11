@@ -32,7 +32,6 @@
 #include "gui/FileDialog.h"
 #include "gui/MessageBox.h"
 #include "gui/export/ExportDialog.h"
-#include "gui/passkeyunlock/PasskeyQuickUnlockUi.h"
 #ifdef Q_OS_MACOS
 #include "gui/osutils/macutils/MacUtils.h"
 #endif
@@ -575,57 +574,6 @@ void DatabaseTabWidget::showDatabaseSettings(bool state)
 void DatabaseTabWidget::showDatabaseSecurity()
 {
     currentDatabaseWidget()->switchToDatabaseSecurity();
-}
-
-void DatabaseTabWidget::enablePasskeyQuickUnlock()
-{
-    auto* dbWidget = currentDatabaseWidget();
-    if (!dbWidget) {
-        return;
-    }
-
-    const auto result = PasskeyQuickUnlockUi::enable(
-        this, reinterpret_cast<void*>(window()->winId()), dbWidget->database());
-    if (result.outcome == PasskeyQuickUnlockUi::Outcome::Cancelled) {
-        return;
-    }
-    if (result.outcome == PasskeyQuickUnlockUi::Outcome::Failed) {
-        emit messageGlobal(result.message, static_cast<MessageWidget::MessageType>(result.messageType));
-        return;
-    }
-
-    if (!saveDatabase()) {
-        emit messageGlobal(tr("Passkey quick unlock was configured but saving the database failed."),
-                           MessageWidget::Warning);
-        return;
-    }
-
-    emit messageGlobal(tr("Passkey quick unlock enabled."), MessageWidget::Positive);
-}
-
-void DatabaseTabWidget::disablePasskeyQuickUnlock()
-{
-    auto* dbWidget = currentDatabaseWidget();
-    if (!dbWidget) {
-        return;
-    }
-
-    const auto result = PasskeyQuickUnlockUi::disable(this, dbWidget->database());
-    if (result.outcome == PasskeyQuickUnlockUi::Outcome::Cancelled) {
-        return;
-    }
-    if (result.outcome == PasskeyQuickUnlockUi::Outcome::Failed) {
-        emit messageGlobal(result.message, static_cast<MessageWidget::MessageType>(result.messageType));
-        return;
-    }
-
-    if (!saveDatabase()) {
-        emit messageGlobal(tr("Passkey quick unlock was removed but saving the database failed."),
-                           MessageWidget::Warning);
-        return;
-    }
-
-    emit messageGlobal(tr("Passkey quick unlock removed."), MessageWidget::Positive);
 }
 
 #ifdef KPXC_FEATURE_BROWSER

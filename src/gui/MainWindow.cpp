@@ -53,7 +53,6 @@
 #include "keeshare/KeeShare.h"
 #include "keeshare/SettingsPageKeeShare.h"
 #include "keys/drivers/YubiKey.h"
-#include "passkeyunlock/PasskeyUnlock.h"
 
 #ifdef KPXC_FEATURE_UPDATES
 #include "gui/UpdateCheckDialog.h"
@@ -455,14 +454,6 @@ MainWindow::MainWindow()
     connect(m_ui->actionDatabaseMerge, SIGNAL(triggered()), m_ui->tabWidget, SLOT(mergeDatabase()));
     connect(m_ui->actionDatabaseSettings, SIGNAL(toggled(bool)), m_ui->tabWidget, SLOT(showDatabaseSettings(bool)));
     connect(m_ui->actionDatabaseSecurity, SIGNAL(triggered()), m_ui->tabWidget, SLOT(showDatabaseSecurity()));
-    connect(m_ui->actionSetupPasskeyQuickUnlock,
-            SIGNAL(triggered()),
-            m_ui->tabWidget,
-            SLOT(enablePasskeyQuickUnlock()));
-    connect(m_ui->actionRemovePasskeyQuickUnlock,
-            SIGNAL(triggered()),
-            m_ui->tabWidget,
-            SLOT(disablePasskeyQuickUnlock()));
     connect(m_ui->actionReports, SIGNAL(toggled(bool)), m_ui->tabWidget, SLOT(showDatabaseReports(bool)));
 #ifdef KPXC_FEATURE_BROWSER
     connect(m_ui->actionPasskeys, SIGNAL(triggered()), m_ui->tabWidget, SLOT(showPasskeys()));
@@ -1004,13 +995,6 @@ void MainWindow::updateMenuActionState()
     m_ui->actionLockDatabase->setEnabled(databaseUnlocked);
     m_ui->actionLockAllDatabases->setEnabled(hasLockableDatabase);
     m_ui->actionLockDatabaseToolbar->setEnabled(hasLockableDatabase);
-    const bool passkeyQuickUnlockAvailable = PasskeyUnlock::isAvailable();
-    m_ui->actionSetupPasskeyQuickUnlock->setVisible(passkeyQuickUnlockAvailable);
-    m_ui->actionRemovePasskeyQuickUnlock->setVisible(passkeyQuickUnlockAvailable);
-    m_ui->actionSetupPasskeyQuickUnlock->setEnabled(databaseUnlocked && passkeyQuickUnlockAvailable);
-    m_ui->actionRemovePasskeyQuickUnlock->setEnabled(
-        databaseUnlocked && passkeyQuickUnlockAvailable
-        && dbWidget && PasskeyUnlock::isConfigured(dbWidget->database()));
     m_ui->actionDatabaseSettings->setEnabled(inDatabase || inDatabaseSettings);
     m_ui->actionDatabaseSecurity->setEnabled(inDatabase || inDatabaseSettings);
     m_ui->actionReports->setEnabled(inDatabase || inReports);
