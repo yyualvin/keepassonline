@@ -58,6 +58,9 @@ public:
     void triggerQuickUnlock();
     void resetQuickUnlock();
 
+    void unlockWithPasskey();
+    void updatePasskeyUnlockButton();
+
 signals:
     void dialogFinished(bool accepted);
 

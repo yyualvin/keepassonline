@@ -113,6 +113,9 @@ add_unit_test(NAME testpassphrasegenerator SOURCES TestPassphraseGenerator.cpp
 add_unit_test(NAME testhibp SOURCES TestHibp.cpp
         LIBS ${TEST_LIBRARIES})
 
+add_unit_test(NAME testpasskeyunlock SOURCES TestPasskeyUnlock.cpp
+        LIBS ${TEST_LIBRARIES})
+
 add_unit_test(NAME testtotp SOURCES TestTotp.cpp
         LIBS ${TEST_LIBRARIES})
 

@@ -195,8 +195,7 @@ KeePass1Reader::readDatabase(QIODevice* device, const QString& password, QIODevi
     for (Entry* entry : asConst(entries)) {
         if (isMetaStream(entry)) {
             parseMetaStream(entry);
-            m_entryUuids.remove(m_entryUuids.key(entry));
-            m_entryGroupIds.remove(entry);
+
             delete entry;
         } else {
             quint32 groupId = m_entryGroupIds.value(entry);

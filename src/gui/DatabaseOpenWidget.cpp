@@ -26,6 +26,7 @@
 #include "keys/ChallengeResponseKey.h"
 #include "keys/FileKey.h"
 #include "keys/drivers/YubiKeyInterfaceUSB.h"
+#include "passkeyunlock/PasskeyUnlock.h"
 #include "quickunlock/QuickUnlockInterface.h"
 
 #include <QCheckBox>
@@ -81,6 +82,7 @@ DatabaseOpenWidget::DatabaseOpenWidget(QWidget* parent)
     okBtn->setDefault(true);
     connect(m_ui->buttonBox, SIGNAL(accepted()), SLOT(openDatabase()));
     connect(m_ui->buttonBox, SIGNAL(rejected()), SLOT(reject()));
+    connect(m_ui->unlockWithPasskeyButton, &QPushButton::clicked, this, &DatabaseOpenWidget::unlockWithPasskey);
 
     connect(m_ui->addKeyFileLinkLabel, &QLabel::linkActivated, this, &DatabaseOpenWidget::browseKeyFile);
     connect(m_ui->keyFileLineEdit, &PasswordWidget::textChanged, this, [&](const QString& text) {
@@ -284,6 +286,84 @@ void DatabaseOpenWidget::load(const QString& filename)
 
     // Do initial auto-poll
     pollHardwareKey();
+
+    updatePasskeyUnlockButton();
+}
+
+void DatabaseOpenWidget::updatePasskeyUnlockButton()
+{
+    const bool show = !m_db.isNull() && PasskeyUnlock::isConfigured(m_db) && PasskeyUnlock::isAvailable()
+                      && !isOnQuickUnlockScreen();
+    m_ui->unlockWithPasskeyButton->setVisible(show);
+    m_ui->unlockWithPasskeyButton->setEnabled(show && !unlockingDatabase());
+}
+
+void DatabaseOpenWidget::unlockWithPasskey()
+{
+    if (unlockingDatabase()) {
+        qWarning("Ignoring passkey unlock request for %s because of running unlock action.", qPrintable(m_filename));
+        return;
+    }
+
+    setUserInteractionLock(true);
+    m_ui->messageWidget->hide();
+
+    QString error;
+    QSharedPointer<CompositeKey> databaseKey;
+    const auto parentWindow = reinterpret_cast<void*>(window()->winId());
+    if (!PasskeyUnlock::unlock(m_db, parentWindow, databaseKey, &error)) {
+        setUserInteractionLock(false);
+        m_ui->messageWidget->showMessage(error, MessageWidget::Error);
+        updatePasskeyUnlockButton();
+        return;
+    }
+
+    m_db.reset(new Database());
+    const bool ok = m_db->open(m_filename, databaseKey, &error);
+
+    if (ok) {
+        if (m_db->hasMinorVersionMismatch()) {
+            QScopedPointer<QMessageBox> msgBox(new QMessageBox(this));
+            msgBox->setIcon(QMessageBox::Warning);
+            msgBox->setWindowTitle(tr("Database Version Mismatch"));
+            msgBox->setText(tr("The database you are trying to open was most likely\n"
+                               "created by a newer version of KeePassXC.\n\n"
+                               "You can try to open it anyway, but it may be incomplete\n"
+                               "and saving any changes may incur data loss.\n\n"
+                               "We recommend you update your KeePassXC installation."));
+            auto btn = msgBox->addButton(tr("Open database anyway"), QMessageBox::ButtonRole::AcceptRole);
+            msgBox->setDefaultButton(btn);
+            msgBox->addButton(QMessageBox::Cancel);
+            msgBox->layout()->setSizeConstraint(QLayout::SetMinimumSize);
+            msgBox->exec();
+            if (msgBox->clickedButton() != btn) {
+                m_db.reset(new Database());
+                m_db->open(m_filename, nullptr, &error);
+                m_ui->messageWidget->showMessage(tr("Database unlock canceled."), MessageWidget::MessageType::Error);
+                setUserInteractionLock(false);
+                updatePasskeyUnlockButton();
+                return;
+            }
+        }
+
+        // Save Quick Unlock credentials if available
+        if (isQuickUnlockAvailable()) {
+            auto keyData = databaseKey->serialize();
+            getQuickUnlock()->setKey(m_db->publicUuid(), keyData);
+            m_ui->messageWidget->hideMessage();
+        }
+
+        emit dialogFinished(true);
+        clearForms();
+    } else {
+        setUserInteractionLock(false);
+        m_ui->messageWidget->showMessage(
+            tr("Passkey quick unlock succeeded but the database could not be opened with the recovered key. "
+               "The database credentials may have changed. Please unlock normally.\n\n%1")
+                .arg(error),
+            MessageWidget::Error);
+        updatePasskeyUnlockButton();
+    }
 }
 
 void DatabaseOpenWidget::clearForms()
@@ -608,6 +688,7 @@ void DatabaseOpenWidget::setUserInteractionLock(bool state)
         m_ui->centralStack->setEnabled(true);
     }
     m_unlockingDatabase = state;
+    updatePasskeyUnlockButton();
 }
 
 bool DatabaseOpenWidget::canPerformQuickUnlock() const
@@ -635,6 +716,7 @@ void DatabaseOpenWidget::toggleQuickUnlockScreen()
             m_ui->editPassword->setFocus();
         }
     }
+    updatePasskeyUnlockButton();
 }
 
 void DatabaseOpenWidget::triggerQuickUnlock()

@@ -32,6 +32,7 @@
 #include "gui/FileDialog.h"
 #include "gui/MessageBox.h"
 #include "gui/export/ExportDialog.h"
+#include "passkeyunlock/PasskeyUnlock.h"
 #ifdef Q_OS_MACOS
 #include "gui/osutils/macutils/MacUtils.h"
 #endif
@@ -574,6 +575,86 @@ void DatabaseTabWidget::showDatabaseSettings(bool state)
 void DatabaseTabWidget::showDatabaseSecurity()
 {
     currentDatabaseWidget()->switchToDatabaseSecurity();
+}
+
+void DatabaseTabWidget::enablePasskeyQuickUnlock()
+{
+    auto* dbWidget = currentDatabaseWidget();
+    if (!dbWidget || dbWidget->isLocked()) {
+        emit messageGlobal(tr("The database must be unlocked to set up passkey quick unlock."), MessageWidget::Warning);
+        return;
+    }
+
+    if (!PasskeyUnlock::isAvailable()) {
+        emit messageGlobal(tr("WebAuthn with PRF support is not available on this system."), MessageWidget::Error);
+        return;
+    }
+
+    const auto db = dbWidget->database();
+    if (PasskeyUnlock::isConfigured(db)) {
+        const auto result = MessageBox::question(this,
+                                                 tr("Passkey Quick Unlock"),
+                                                 tr("Passkey quick unlock is already configured for this database. "
+                                                    "Do you want to replace the existing configuration?"),
+                                                 MessageBox::Yes | MessageBox::No,
+                                                 MessageBox::No);
+        if (result != MessageBox::Yes) {
+            return;
+        }
+    }
+
+    QString error;
+    const auto parentWindow = reinterpret_cast<void*>(window()->winId());
+    if (!PasskeyUnlock::enable(db, parentWindow, &error)) {
+        emit messageGlobal(error, MessageWidget::Error);
+        return;
+    }
+
+    if (!saveDatabase()) {
+        emit messageGlobal(tr("Passkey quick unlock was configured but saving the database failed."),
+                           MessageWidget::Warning);
+        return;
+    }
+
+    emit messageGlobal(tr("Passkey quick unlock enabled."), MessageWidget::Positive);
+}
+
+void DatabaseTabWidget::disablePasskeyQuickUnlock()
+{
+    auto* dbWidget = currentDatabaseWidget();
+    if (!dbWidget || dbWidget->isLocked()) {
+        emit messageGlobal(tr("The database must be unlocked to remove passkey quick unlock."), MessageWidget::Warning);
+        return;
+    }
+
+    const auto db = dbWidget->database();
+    if (!PasskeyUnlock::isConfigured(db)) {
+        emit messageGlobal(tr("Passkey quick unlock is not configured for this database."), MessageWidget::Information);
+        return;
+    }
+
+    const auto result = MessageBox::question(this,
+                                             tr("Passkey Quick Unlock"),
+                                             tr("Remove passkey quick unlock from this database?"),
+                                             MessageBox::Yes | MessageBox::No,
+                                             MessageBox::No);
+    if (result != MessageBox::Yes) {
+        return;
+    }
+
+    QString error;
+    if (!PasskeyUnlock::disable(db, &error)) {
+        emit messageGlobal(error, MessageWidget::Error);
+        return;
+    }
+
+    if (!saveDatabase()) {
+        emit messageGlobal(tr("Passkey quick unlock was removed but saving the database failed."),
+                           MessageWidget::Warning);
+        return;
+    }
+
+    emit messageGlobal(tr("Passkey quick unlock removed."), MessageWidget::Positive);
 }
 
 #ifdef KPXC_FEATURE_BROWSER

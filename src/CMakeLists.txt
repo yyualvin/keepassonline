@@ -51,6 +51,7 @@ set(core_SOURCES
         cli/TextStream.cpp
         crypto/Crypto.cpp
         crypto/CryptoHash.cpp
+        crypto/Hkdf.cpp
         crypto/Random.cpp
         crypto/SymmetricCipher.cpp
         crypto/kdf/Kdf.cpp
@@ -89,6 +90,8 @@ set(core_SOURCES
         keys/drivers/YubiKeyInterface.cpp
         keys/drivers/YubiKeyInterfaceUSB.cpp
         keys/drivers/YubiKeyInterfacePCSC.cpp
+        passkeyunlock/PasskeyUnlock.cpp
+        passkeyunlock/PasskeyUnlockRecord.cpp
         streams/HashedBlockStream.cpp
         streams/HashingStream.cpp
         streams/HmacBlockStream.cpp
@@ -290,6 +293,9 @@ if(WIN32)
     if (WINSDK)
         list(APPEND gui_SOURCES quickunlock/WindowsHello.cpp)
     endif()
+    list(APPEND core_SOURCES passkeyunlock/WinWebAuthn.cpp)
+else()
+    list(APPEND core_SOURCES passkeyunlock/WebAuthnInterface.cpp)
 endif()
 
 add_subdirectory(browser)

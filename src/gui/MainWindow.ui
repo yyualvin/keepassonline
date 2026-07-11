@@ -256,6 +256,9 @@
     <addaction name="actionLockDatabase"/>
     <addaction name="actionLockAllDatabases"/>
     <addaction name="separator"/>
+    <addaction name="actionSetupPasskeyQuickUnlock"/>
+    <addaction name="actionRemovePasskeyQuickUnlock"/>
+    <addaction name="separator"/>
     <addaction name="actionDatabaseSettings"/>
     <addaction name="actionDatabaseSecurity"/>
     <addaction name="actionReports"/>
@@ -645,6 +648,22 @@
    </property>
    <property name="toolTip">
     <string>Show Database Security</string>
+   </property>
+  </action>
+  <action name="actionSetupPasskeyQuickUnlock">
+   <property name="text">
+    <string>Set Up Passkey Quick Unlock…</string>
+   </property>
+   <property name="toolTip">
+    <string>Wrap the database key with a passkey for quick unlock</string>
+   </property>
+  </action>
+  <action name="actionRemovePasskeyQuickUnlock">
+   <property name="text">
+    <string>Remove Passkey Quick Unlock</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove the passkey quick unlock record from this database</string>
    </property>
   </action>
   <action name="actionReports">

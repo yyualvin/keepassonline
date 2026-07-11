@@ -27,6 +27,7 @@
 #include "keys/ChallengeResponseKey.h"
 #include "keys/FileKey.h"
 #include "keys/PasswordKey.h"
+#include "passkeyunlock/PasskeyUnlock.h"
 #include "quickunlock/QuickUnlockInterface.h"
 
 #include <QLayout>
@@ -216,6 +217,7 @@ bool DatabaseSettingsWidgetDatabaseKey::saveSettings()
     m_db->setKey(newKey, true, false, false);
 
     getQuickUnlock()->reset(m_db->publicUuid());
+    PasskeyUnlock::removeRecord(m_db);
 
     emit editFinished(true);
     if (m_isDirty) {

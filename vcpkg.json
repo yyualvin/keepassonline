@@ -4,10 +4,7 @@
   "builtin-baseline": "66c0373dc7fca549e5803087b9487edfe3aca0a1",
   "dependencies": [
     "botan",
-    "minizip",
     "libqrencode",
-    "readline",
-    "zlib",
     {
       "name": "libusb",
       "platform": "linux | freebsd"
@@ -17,12 +14,18 @@
       "platform": "linux | freebsd"
     },
     {
-      "name": "libxtst",
+      "name": "libxkbcommon",
       "platform": "linux | freebsd"
     },
     {
-      "name": "libxkbcommon",
+      "name": "libxtst",
       "platform": "linux | freebsd"
-    }
+    },
+    "minizip",
+    "qtbase",
+    "qtsvg",
+    "readline",
+    "zlib",
+    "qttools"
   ]
 }
