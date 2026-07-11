@@ -22,6 +22,7 @@
 #include "core/PasswordHealth.h"
 #include "gui/MessageBox.h"
 #include "gui/databasekey/KeyFileEditWidget.h"
+#include "gui/databasekey/PasskeyUnlockEditWidget.h"
 #include "gui/databasekey/PasswordEditWidget.h"
 #include "gui/databasekey/YubiKeyEditWidget.h"
 #include "keys/ChallengeResponseKey.h"
@@ -38,6 +39,7 @@ DatabaseSettingsWidgetDatabaseKey::DatabaseSettingsWidgetDatabaseKey(QWidget* pa
     , m_additionalKeyOptionsToggle(new QPushButton(tr("Add additional protection…"), this))
     , m_additionalKeyOptions(new QWidget(this))
     , m_passwordEditWidget(new PasswordEditWidget(this))
+    , m_passkeyUnlockEditWidget(new PasskeyUnlockEditWidget(this))
     , m_keyFileEditWidget(new KeyFileEditWidget(this))
     , m_yubiKeyEditWidget(new YubiKeyEditWidget(this))
 {
@@ -47,6 +49,7 @@ DatabaseSettingsWidgetDatabaseKey::DatabaseSettingsWidgetDatabaseKey(QWidget* pa
 
     // Primary password option
     vbox->addWidget(m_passwordEditWidget);
+    vbox->addWidget(m_passkeyUnlockEditWidget);
 
     // Additional key options
     m_additionalKeyOptionsToggle->setObjectName("additionalKeyOptionsToggle");
@@ -68,9 +71,26 @@ DatabaseSettingsWidgetDatabaseKey::DatabaseSettingsWidgetDatabaseKey(QWidget* pa
 
 DatabaseSettingsWidgetDatabaseKey::~DatabaseSettingsWidgetDatabaseKey() = default;
 
+void DatabaseSettingsWidgetDatabaseKey::setSaveDatabaseCallback(const std::function<bool()>& callback)
+{
+    m_saveDatabaseCallback = callback;
+    m_passkeyUnlockEditWidget->setSaveDatabaseCallback(callback);
+}
+
+void DatabaseSettingsWidgetDatabaseKey::setShowMessageCallback(
+    const std::function<void(const QString&, KMessageWidget::MessageType)>& callback)
+{
+    m_showMessageCallback = callback;
+    m_passkeyUnlockEditWidget->setShowMessageCallback(callback);
+}
+
 void DatabaseSettingsWidgetDatabaseKey::loadSettings(QSharedPointer<Database> db)
 {
     DatabaseSettingsWidget::loadSettings(db);
+
+    m_passkeyUnlockEditWidget->setSaveDatabaseCallback(m_saveDatabaseCallback);
+    m_passkeyUnlockEditWidget->setShowMessageCallback(m_showMessageCallback);
+    m_passkeyUnlockEditWidget->loadSettings(db);
 
     if (!m_db->key() || m_db->key()->keys().isEmpty()) {
         // Database has no key, we are about to add a new one
@@ -218,6 +238,7 @@ bool DatabaseSettingsWidgetDatabaseKey::saveSettings()
 
     getQuickUnlock()->reset(m_db->publicUuid());
     PasskeyUnlock::removeRecord(m_db);
+    m_passkeyUnlockEditWidget->refreshState();
 
     emit editFinished(true);
     if (m_isDirty) {

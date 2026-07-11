@@ -32,7 +32,9 @@
 
 #include "core/Database.h"
 #include "core/Global.h"
+#include "gui/DatabaseWidget.h"
 #include "gui/Icons.h"
+#include "gui/MessageWidget.h"
 
 #include <QScrollArea>
 
@@ -96,6 +98,12 @@ void DatabaseSettingsDialog::load(const QSharedPointer<Database>& db)
     // Default to the main page on load
     setCurrentPage(0);
     setHeadline(tr("Database Settings: %1").arg(db->canonicalFilePath()));
+
+    if (auto* dbWidget = qobject_cast<DatabaseWidget*>(parent())) {
+        m_databaseKeyWidget->setSaveDatabaseCallback([dbWidget]() { return dbWidget->save(); });
+        m_databaseKeyWidget->setShowMessageCallback(
+            [dbWidget](const QString& text, KMessageWidget::MessageType type) { dbWidget->showMessage(text, type); });
+    }
 
     m_generalWidget->loadSettings(db);
     m_databaseKeyWidget->loadSettings(db);

@@ -176,8 +176,10 @@ set(gui_SOURCES
         gui/tag/TagsEdit.cpp
         gui/databasekey/KeyComponentWidget.cpp
         gui/databasekey/PasswordEditWidget.cpp
+        gui/databasekey/PasskeyUnlockEditWidget.cpp
         gui/databasekey/YubiKeyEditWidget.cpp
         gui/databasekey/KeyFileEditWidget.cpp
+        gui/passkeyunlock/PasskeyQuickUnlockUi.cpp
         gui/dbsettings/DatabaseSettingsWidget.cpp
         gui/dbsettings/DatabaseSettingsDialog.cpp
         gui/dbsettings/DatabaseSettingsWidgetGeneral.cpp

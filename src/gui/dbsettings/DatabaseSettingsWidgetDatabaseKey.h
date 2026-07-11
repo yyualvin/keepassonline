@@ -19,8 +19,10 @@
 #define KEEPASSXC_DATABASESETTINGSWIDGETDATABASEKEY_H
 
 #include "DatabaseSettingsWidget.h"
+#include "gui/KMessageWidget.h"
 
 #include <QPointer>
+#include <functional>
 
 class Database;
 class Key;
@@ -30,6 +32,7 @@ class KeyComponentWidget;
 class PasswordEditWidget;
 class KeyFileEditWidget;
 class YubiKeyEditWidget;
+class PasskeyUnlockEditWidget;
 class QPushButton;
 
 class DatabaseSettingsWidgetDatabaseKey : public DatabaseSettingsWidget
@@ -42,6 +45,9 @@ public:
     ~DatabaseSettingsWidgetDatabaseKey() override;
 
     void loadSettings(QSharedPointer<Database> db) override;
+
+    void setSaveDatabaseCallback(const std::function<bool()>& callback);
+    void setShowMessageCallback(const std::function<void(const QString&, KMessageWidget::MessageType)>& callback);
 
 public slots:
     void initialize() override;
@@ -70,8 +76,12 @@ private:
     const QPointer<QPushButton> m_additionalKeyOptionsToggle;
     const QPointer<QWidget> m_additionalKeyOptions;
     const QPointer<PasswordEditWidget> m_passwordEditWidget;
+    const QPointer<PasskeyUnlockEditWidget> m_passkeyUnlockEditWidget;
     const QPointer<KeyFileEditWidget> m_keyFileEditWidget;
     const QPointer<YubiKeyEditWidget> m_yubiKeyEditWidget;
+
+    std::function<bool()> m_saveDatabaseCallback;
+    std::function<void(const QString&, KMessageWidget::MessageType)> m_showMessageCallback;
 };
 
 #endif // KEEPASSXC_DATABASESETTINGSWIDGETDATABASEKEY_H
