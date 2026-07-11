@@ -17,6 +17,8 @@
 
 #include "WinWebAuthn.h"
 
+#include "core/AsyncTask.h"
+#include "core/SecurityPromptFocusWin.h"
 #include "crypto/Random.h"
 
 #include <QJsonDocument>
@@ -259,14 +261,14 @@ bool WinWebAuthn::makeCredential(void* parentWindow,
     options.bEnablePrf = TRUE;
     options.bPreferResidentKey = TRUE;
 
+    // The security prompt may appear behind the application due to a Windows bug.
+    // Run the blocking call off the UI thread so the event loop can bring it to the front.
+    SecurityPromptFocusWin::queueFocus();
     WEBAUTHN_CREDENTIAL_ATTESTATION* attestation = nullptr;
-    const HRESULT hr = g_api.makeCredential(static_cast<HWND>(parentWindow),
-                                              &rpInfo,
-                                              &userInfo,
-                                              &credParams,
-                                              &clientData,
-                                              &options,
-                                              &attestation);
+    const HRESULT hr = AsyncTask::runAndWaitForFuture([&] {
+        return g_api.makeCredential(
+            static_cast<HWND>(parentWindow), &rpInfo, &userInfo, &credParams, &clientData, &options, &attestation);
+    });
     auto freeGuard = qScopeGuard([&] {
         if (attestation) {
             g_api.freeAttestation(attestation);
@@ -340,9 +342,13 @@ bool WinWebAuthn::getAssertion(void* parentWindow,
     options.dwUserVerificationRequirement = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
     options.pHmacSecretSaltValues = &saltValues;
 
+    // The security prompt may appear behind the application due to a Windows bug.
+    // Run the blocking call off the UI thread so the event loop can bring it to the front.
+    SecurityPromptFocusWin::queueFocus();
     WEBAUTHN_ASSERTION* assertion = nullptr;
-    const HRESULT hr =
-        g_api.getAssertion(static_cast<HWND>(parentWindow), rpIdW.c_str(), &clientData, &options, &assertion);
+    const HRESULT hr = AsyncTask::runAndWaitForFuture([&] {
+        return g_api.getAssertion(static_cast<HWND>(parentWindow), rpIdW.c_str(), &clientData, &options, &assertion);
+    });
     auto freeGuard = qScopeGuard([&] {
         if (assertion) {
             g_api.freeAssertion(assertion);

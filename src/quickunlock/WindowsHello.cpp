@@ -25,11 +25,11 @@
 #include <winrt/windows.storage.streams.h>
 
 #include "core/AsyncTask.h"
+#include "core/SecurityPromptFocusWin.h"
 #include "crypto/CryptoHash.h"
 #include "crypto/Random.h"
 #include "crypto/SymmetricCipher.h"
 
-#include <QTimer>
 #include <QWindow>
 
 using namespace winrt;
@@ -41,21 +41,6 @@ using namespace Windows::Storage::Streams;
 namespace
 {
     const std::wstring s_winHelloKeyName{L"keepassxc_winhello"};
-    int g_promptFocusCount = 0;
-
-    void queueSecurityPromptFocus(int delay = 500)
-    {
-        QTimer::singleShot(delay, [] {
-            auto hWnd = ::FindWindowA("Credential Dialog Xaml Host", nullptr);
-            if (hWnd) {
-                ::SetForegroundWindow(hWnd);
-            } else if (++g_promptFocusCount <= 3) {
-                queueSecurityPromptFocus();
-                return;
-            }
-            g_promptFocusCount = 0;
-        });
-    }
 
     bool deriveEncryptionKey(QByteArray& challenge, QByteArray& key, QString& error)
     {
@@ -112,7 +97,7 @@ QString WindowsHello::errorString() const
 
 bool WindowsHello::setKey(const QUuid& dbUuid, const QByteArray& data)
 {
-    queueSecurityPromptFocus();
+    SecurityPromptFocusWin::queueFocus();
 
     // Generate a random challenge that will be signed by Windows Hello
     // to create the key. The challenge is also used as the IV.
@@ -149,7 +134,7 @@ bool WindowsHello::getKey(const QUuid& dbUuid, QByteArray& data)
         return false;
     }
 
-    queueSecurityPromptFocus();
+    SecurityPromptFocusWin::queueFocus();
 
     // Read the previously used challenge and encrypted data
     auto ivSize = SymmetricCipher::defaultIvSize(SymmetricCipher::Aes256_GCM);

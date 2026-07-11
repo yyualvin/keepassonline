@@ -293,7 +293,9 @@ if(WIN32)
     if (WINSDK)
         list(APPEND gui_SOURCES quickunlock/WindowsHello.cpp)
     endif()
-    list(APPEND core_SOURCES passkeyunlock/WinWebAuthn.cpp)
+    list(APPEND core_SOURCES
+            core/SecurityPromptFocusWin.cpp
+            passkeyunlock/WinWebAuthn.cpp)
 else()
     list(APPEND core_SOURCES passkeyunlock/WebAuthnInterface.cpp)
 endif()
