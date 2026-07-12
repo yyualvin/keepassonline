@@ -1333,9 +1333,18 @@ void DatabaseWidget::loadDatabase(bool accepted)
 
     if (accepted) {
         emit databaseAboutToUnlock();
+        const bool pendingQuickUnlockSave = openWidget->quickUnlockPendingSave();
         replaceDatabase(openWidget->database());
         switchToMainView();
         processAutoOpen();
+
+        if (pendingQuickUnlockSave) {
+            if (save()) {
+                showMessage(tr("Quick unlock enabled."), MessageWidget::Positive);
+            } else {
+                showMessage(tr("Quick unlock was configured but saving the database failed."), MessageWidget::Warning);
+            }
+        }
 
         restoreGroupEntryFocus(m_groupBeforeLock, m_entryBeforeLock);
 
@@ -1503,12 +1512,22 @@ void DatabaseWidget::unlockDatabase(bool accepted)
 
     emit databaseAboutToUnlock();
     QSharedPointer<Database> db;
+    bool pendingQuickUnlockSave = false;
     if (senderDialog) {
+        pendingQuickUnlockSave = senderDialog->quickUnlockPendingSave();
         db = senderDialog->database();
     } else {
         db = m_databaseOpenWidget->database();
     }
     replaceDatabase(db);
+
+    if (pendingQuickUnlockSave) {
+        if (save()) {
+            showMessage(tr("Quick unlock enabled."), MessageWidget::Positive);
+        } else {
+            showMessage(tr("Quick unlock was configured but saving the database failed."), MessageWidget::Warning);
+        }
+    }
 
     restoreGroupEntryFocus(m_groupBeforeLock, m_entryBeforeLock);
     m_groupBeforeLock = QUuid();
@@ -1970,7 +1989,7 @@ void DatabaseWidget::closeEvent(QCloseEvent* event)
         return;
     }
 
-    m_databaseOpenWidget->resetQuickUnlock();
+    m_databaseOpenWidget->clearSessionQuickUnlock();
     event->accept();
 }
 

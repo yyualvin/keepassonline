@@ -27,18 +27,24 @@ public:
     bool isAvailable() const override;
     QString errorString() const override;
 
-    bool setKey(const QUuid& dbUuid, const QByteArray& passwordKey) override;
-    bool getKey(const QUuid& dbUuid, QByteArray& passwordKey) override;
-    bool hasKey(const QUuid& dbUuid) const override;
-
-    void reset(const QUuid& dbUuid) override;
-    void reset() override;
+    bool hasKey(const QSharedPointer<Database>& db) const override;
+    bool storeKey(const QSharedPointer<Database>& db, void* parentWindow, QString* error = nullptr) override;
+    bool retrieveKey(const QSharedPointer<Database>& db,
+                     QByteArray& serializedKey,
+                     void* parentWindow,
+                     QString* error = nullptr) override;
+    void reset(const QSharedPointer<Database>& db) override;
+    void clearSessionStorage(const QSharedPointer<Database>& db) override;
 
 private:
     static bool isWatchAvailable();
     static bool isTouchIdAvailable();
     static bool isPasswordFallbackPossible();
-    bool setKey(const QUuid& dbUuid, const QByteArray& passwordKey, const bool ignoreTouchID);
+    bool setSessionKey(const QUuid& dbUuid, const QByteArray& passwordKey);
+    bool setSessionKey(const QUuid& dbUuid, const QByteArray& passwordKey, const bool ignoreTouchID);
+    bool getSessionKey(const QUuid& dbUuid, QByteArray& passwordKey);
+    bool hasSessionKey(const QUuid& dbUuid) const;
+    void clearSessionKey(const QUuid& dbUuid);
 
     static void deleteKeyEntry(const QString& accountName);
     static QString databaseKeyName(const QUuid& dbUuid);

@@ -28,6 +28,7 @@ class Database;
 class DatabaseSettingsWidgetGeneral;
 class DatabaseSettingsWidgetEncryption;
 class DatabaseSettingsWidgetDatabaseKey;
+class DatabaseSettingsWidgetQuickUnlock;
 #ifdef KPXC_FEATURE_BROWSER
 class DatabaseSettingsWidgetBrowser;
 #endif
@@ -65,6 +66,7 @@ private:
     QPointer<QTabWidget> m_securityTabWidget;
     QPointer<DatabaseSettingsWidgetDatabaseKey> m_databaseKeyWidget;
     QPointer<DatabaseSettingsWidgetEncryption> m_encryptionWidget;
+    QPointer<DatabaseSettingsWidgetQuickUnlock> m_quickUnlockWidget;
 #ifdef KPXC_FEATURE_BROWSER
     QPointer<DatabaseSettingsWidgetBrowser> m_browserWidget;
 #endif

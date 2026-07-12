@@ -142,6 +142,10 @@ private slots:
 
         QVERIFY(PasskeyUnlock::isConfigured(db));
 
+        QByteArray serializedKey;
+        QVERIFY(PasskeyUnlock::retrieveSerializedKey(db, nullptr, serializedKey, &error));
+        QCOMPARE(serializedKey, key->serialize());
+
         QSharedPointer<CompositeKey> recovered;
         QVERIFY(PasskeyUnlock::unlock(db, nullptr, recovered, &error));
         QVERIFY(!recovered.isNull());

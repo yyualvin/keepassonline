@@ -41,6 +41,10 @@ public:
                        void* parentWindow,
                        QSharedPointer<CompositeKey>& compositeKey,
                        QString* error = nullptr);
+    static bool retrieveSerializedKey(const QSharedPointer<Database>& db,
+                                    void* parentWindow,
+                                    QByteArray& serializedKey,
+                                    QString* error = nullptr);
 
     static bool readRecord(const QSharedPointer<Database>& db, PasskeyUnlockRecord& record);
     static bool writeRecord(const QSharedPointer<Database>& db, const PasskeyUnlockRecord& record);

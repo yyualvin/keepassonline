@@ -416,6 +416,9 @@ void ApplicationSettingsWidget::loadSettings()
 
     m_secUi->quickUnlockCheckBox->setEnabled(getQuickUnlock()->isAvailable());
     m_secUi->quickUnlockCheckBox->setChecked(config()->get(Config::Security_QuickUnlock).toBool());
+#if defined(Q_CC_MSVC)
+    m_secUi->quickUnlockCheckBox->setText(tr("Enable database quick unlock (passkey)"));
+#endif
 
     for (const ExtraPage& page : asConst(m_extraPages)) {
         page.loadSettings();

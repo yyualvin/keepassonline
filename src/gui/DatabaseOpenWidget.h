@@ -50,6 +50,7 @@ public:
     QSharedPointer<Database> database();
     bool unlockingDatabase();
     void showMessage(const QString& text, MessageWidget::MessageType type, int autoHideTimeout);
+    bool quickUnlockPendingSave() const;
 
     // Quick Unlock helper functions
     bool canPerformQuickUnlock() const;
@@ -57,9 +58,7 @@ public:
     void toggleQuickUnlockScreen();
     void triggerQuickUnlock();
     void resetQuickUnlock();
-
-    void unlockWithPasskey();
-    void updatePasskeyUnlockButton();
+    void clearSessionQuickUnlock();
 
 signals:
     void dialogFinished(bool accepted);
@@ -93,6 +92,8 @@ private:
     bool m_blockQuickUnlock = false;
     bool m_unlockingDatabase = false;
     bool m_triedToQuit = false;
+    bool m_quickUnlockDismissed = false;
+    bool m_quickUnlockPendingSave = false;
     QTimer m_hideTimer;
     QTimer m_hideNoHardwareKeysFoundTimer;
 

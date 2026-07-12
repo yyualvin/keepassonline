@@ -195,6 +195,11 @@ void DatabaseOpenDialog::showMessage(const QString& text, MessageWidget::Message
     m_view->showMessage(text, type, autoHideTimeout);
 }
 
+bool DatabaseOpenDialog::quickUnlockPendingSave() const
+{
+    return m_view && m_view->quickUnlockPendingSave();
+}
+
 QSharedPointer<Database> DatabaseOpenDialog::database() const
 {
     return m_db;

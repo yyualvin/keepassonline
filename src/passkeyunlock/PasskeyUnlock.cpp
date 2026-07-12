@@ -341,3 +341,20 @@ bool PasskeyUnlock::unlock(const QSharedPointer<Database>& db,
 
     return true;
 }
+
+bool PasskeyUnlock::retrieveSerializedKey(const QSharedPointer<Database>& db,
+                                          void* parentWindow,
+                                          QByteArray& serializedKey,
+                                          QString* error)
+{
+    serializedKey.clear();
+
+    QSharedPointer<CompositeKey> compositeKey;
+    if (!unlock(db, parentWindow, compositeKey, error)) {
+        return false;
+    }
+
+    serializedKey = compositeKey->serialize();
+    compositeKey.clear();
+    return true;
+}

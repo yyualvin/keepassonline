@@ -18,7 +18,11 @@
 #ifndef KEEPASSXC_QUICKUNLOCKINTERFACE_H
 #define KEEPASSXC_QUICKUNLOCKINTERFACE_H
 
-#include <QUuid>
+#include <QByteArray>
+#include <QSharedPointer>
+#include <QString>
+
+class Database;
 
 class QuickUnlockInterface
 {
@@ -30,13 +34,19 @@ public:
 
     virtual bool isAvailable() const = 0;
     virtual QString errorString() const = 0;
+    virtual bool needsSaveAfterStore() const
+    {
+        return false;
+    }
 
-    virtual bool setKey(const QUuid& dbUuid, const QByteArray& key) = 0;
-    virtual bool getKey(const QUuid& dbUuid, QByteArray& key) = 0;
-    virtual bool hasKey(const QUuid& dbUuid) const = 0;
-
-    virtual void reset(const QUuid& dbUuid) = 0;
-    virtual void reset() = 0;
+    virtual bool hasKey(const QSharedPointer<Database>& db) const = 0;
+    virtual bool storeKey(const QSharedPointer<Database>& db, void* parentWindow, QString* error = nullptr) = 0;
+    virtual bool retrieveKey(const QSharedPointer<Database>& db,
+                             QByteArray& serializedKey,
+                             void* parentWindow,
+                             QString* error = nullptr) = 0;
+    virtual void reset(const QSharedPointer<Database>& db) = 0;
+    virtual void clearSessionStorage(const QSharedPointer<Database>& db);
 };
 
 class NoQuickUnlock : public QuickUnlockInterface
@@ -45,12 +55,13 @@ public:
     bool isAvailable() const override;
     QString errorString() const override;
 
-    bool setKey(const QUuid& dbUuid, const QByteArray& key) override;
-    bool getKey(const QUuid& dbUuid, QByteArray& key) override;
-    bool hasKey(const QUuid& dbUuid) const override;
-
-    void reset(const QUuid& dbUuid) override;
-    void reset() override;
+    bool hasKey(const QSharedPointer<Database>& db) const override;
+    bool storeKey(const QSharedPointer<Database>& db, void* parentWindow, QString* error = nullptr) override;
+    bool retrieveKey(const QSharedPointer<Database>& db,
+                     QByteArray& serializedKey,
+                     void* parentWindow,
+                     QString* error = nullptr) override;
+    void reset(const QSharedPointer<Database>& db) override;
 };
 
 QuickUnlockInterface* getQuickUnlock();

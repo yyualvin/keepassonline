@@ -26,6 +26,16 @@ KeyComponentWidget::KeyComponentWidget(QWidget* parent)
 {
     m_ui->setupUi(this);
 
+    const auto expandingButtonPolicy = QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+    m_ui->addButton->setSizePolicy(expandingButtonPolicy);
+    m_ui->addButton->setMinimumWidth(0);
+    m_ui->changeButton->setSizePolicy(expandingButtonPolicy);
+    m_ui->changeButton->setMinimumWidth(0);
+    m_ui->removeButton->setSizePolicy(expandingButtonPolicy);
+    m_ui->removeButton->setMinimumWidth(0);
+    m_ui->horizontalLayout->setStretch(0, 1);
+    m_ui->horizontalLayout->setStretch(1, 1);
+
     connect(m_ui->addButton, SIGNAL(clicked(bool)), SIGNAL(componentAddRequested()));
     connect(m_ui->changeButton, SIGNAL(clicked(bool)), SIGNAL(componentEditRequested()));
     connect(m_ui->removeButton, SIGNAL(clicked(bool)), SIGNAL(componentRemovalRequested()));

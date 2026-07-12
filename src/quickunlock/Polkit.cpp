@@ -17,6 +17,7 @@
 
 #include "Polkit.h"
 
+#include "core/Database.h"
 #include "crypto/CryptoHash.h"
 #include "crypto/Random.h"
 #include "crypto/SymmetricCipher.h"
@@ -79,7 +80,7 @@ Polkit::~Polkit()
 {
 }
 
-void Polkit::reset(const QUuid& dbUuid)
+void Polkit::clearSessionKey(const QUuid& dbUuid)
 {
     m_encryptedMasterKeys.remove(dbUuid);
 }
@@ -99,9 +100,9 @@ void Polkit::reset()
     m_encryptedMasterKeys.clear();
 }
 
-bool Polkit::setKey(const QUuid& dbUuid, const QByteArray& key)
+bool Polkit::setSessionKey(const QUuid& dbUuid, const QByteArray& key)
 {
-    reset(dbUuid);
+    clearSessionKey(dbUuid);
 
     // Generate a random iv/key pair to encrypt the master password with
     QByteArray randomKey = randomGen()->randomArray(SymmetricCipher::keySize(SymmetricCipher::Aes256_GCM));
@@ -144,9 +145,9 @@ bool Polkit::setKey(const QUuid& dbUuid, const QByteArray& key)
     return true;
 }
 
-bool Polkit::getKey(const QUuid& dbUuid, QByteArray& key)
+bool Polkit::getSessionKey(const QUuid& dbUuid, QByteArray& key)
 {
-    if (!m_polkit || !hasKey(dbUuid)) {
+    if (!m_polkit || !hasSessionKey(dbUuid)) {
         return false;
     }
 
@@ -237,11 +238,51 @@ bool Polkit::getKey(const QUuid& dbUuid, QByteArray& key)
     return false;
 }
 
-bool Polkit::hasKey(const QUuid& dbUuid) const
+bool Polkit::hasSessionKey(const QUuid& dbUuid) const
 {
     if (!m_encryptedMasterKeys.contains(dbUuid)) {
         return false;
     }
 
     return find_key_by_type_and_desc("user", getKeyName(dbUuid).toStdString().c_str(), KEY_SPEC_PROCESS_KEYRING) != -1;
+}
+
+bool Polkit::hasKey(const QSharedPointer<Database>& db) const
+{
+    return db && hasSessionKey(db->publicUuid());
+}
+
+bool Polkit::storeKey(const QSharedPointer<Database>& db, void* parentWindow, QString* error)
+{
+    Q_UNUSED(parentWindow);
+    Q_UNUSED(error);
+    if (!db || !db->key() || db->key()->isEmpty()) {
+        return false;
+    }
+    return setSessionKey(db->publicUuid(), db->key()->serialize());
+}
+
+bool Polkit::retrieveKey(const QSharedPointer<Database>& db,
+                         QByteArray& serializedKey,
+                         void* parentWindow,
+                         QString* error)
+{
+    Q_UNUSED(parentWindow);
+    Q_UNUSED(error);
+    if (!db) {
+        return false;
+    }
+    return getSessionKey(db->publicUuid(), serializedKey);
+}
+
+void Polkit::reset(const QSharedPointer<Database>& db)
+{
+    if (db) {
+        clearSessionKey(db->publicUuid());
+    }
+}
+
+void Polkit::clearSessionStorage(const QSharedPointer<Database>& db)
+{
+    reset(db);
 }

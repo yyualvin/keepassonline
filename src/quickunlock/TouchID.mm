@@ -17,6 +17,7 @@
 
 #include "quickunlock/TouchID.h"
 
+#include "core/Database.h"
 #include "crypto/Random.h"
 #include "crypto/SymmetricCipher.h"
 #include "crypto/CryptoHash.h"
@@ -100,15 +101,57 @@ QString TouchID::errorString() const
     return "";
 }
 
-void TouchID::reset()
+void TouchID::clearSessionKey(const QUuid& dbUuid)
 {
-    m_encryptedMasterKeys.clear();
+    if (!dbUuid.isNull()) {
+        m_encryptedMasterKeys.remove(dbUuid);
+    }
+}
+
+bool TouchID::hasKey(const QSharedPointer<Database>& db) const
+{
+    return db && hasSessionKey(db->publicUuid());
+}
+
+bool TouchID::storeKey(const QSharedPointer<Database>& db, void* parentWindow, QString* error)
+{
+    Q_UNUSED(parentWindow);
+    Q_UNUSED(error);
+    if (!db || !db->key() || db->key()->isEmpty()) {
+        return false;
+    }
+    return setSessionKey(db->publicUuid(), db->key()->serialize());
+}
+
+bool TouchID::retrieveKey(const QSharedPointer<Database>& db,
+                          QByteArray& serializedKey,
+                          void* parentWindow,
+                          QString* error)
+{
+    Q_UNUSED(parentWindow);
+    Q_UNUSED(error);
+    if (!db) {
+        return false;
+    }
+    return getSessionKey(db->publicUuid(), serializedKey);
+}
+
+void TouchID::reset(const QSharedPointer<Database>& db)
+{
+    if (db) {
+        clearSessionKey(db->publicUuid());
+    }
+}
+
+void TouchID::clearSessionStorage(const QSharedPointer<Database>& db)
+{
+    reset(db);
 }
 
 
 
 
-bool TouchID::setKey(const QUuid& dbUuid, const QByteArray& passwordKey, const bool ignoreTouchID)
+bool TouchID::setSessionKey(const QUuid& dbUuid, const QByteArray& passwordKey, const bool ignoreTouchID)
 {
     if (passwordKey.isEmpty()) {
         debug("TouchID::setKey - illegal arguments");
@@ -232,11 +275,11 @@ bool TouchID::setKey(const QUuid& dbUuid, const QByteArray& passwordKey, const b
  * protects the database. The encrypted PasswordKey is kept in memory while the
  * AES key is stored in the macOS KeyChain protected by either TouchID or Apple Watch.
  */
-bool TouchID::setKey(const QUuid& dbUuid, const QByteArray& passwordKey)
+bool TouchID::setSessionKey(const QUuid& dbUuid, const QByteArray& passwordKey)
 {
-    if (!setKey(dbUuid,passwordKey, false)) {
+    if (!setSessionKey(dbUuid, passwordKey, false)) {
         debug("TouchID::setKey failed with error trying fallback method without TouchID flag");
-        return setKey(dbUuid, passwordKey, true);
+        return setSessionKey(dbUuid, passwordKey, true);
     } else {
         return true;
     }
@@ -246,11 +289,11 @@ bool TouchID::setKey(const QUuid& dbUuid, const QByteArray& passwordKey)
  * Checks if an encrypted PasswordKey is available for the given database, tries to
  * decrypt it using the KeyChain and if successful, returns it.
  */
-bool TouchID::getKey(const QUuid& dbUuid, QByteArray& passwordKey)
+bool TouchID::getSessionKey(const QUuid& dbUuid, QByteArray& passwordKey)
 {
     passwordKey.clear();
 
-    if (!hasKey(dbUuid)) {
+    if (!hasSessionKey(dbUuid)) {
         debug("TouchID::getKey - No stored key found");
         return false;
     }
@@ -313,7 +356,7 @@ bool TouchID::getKey(const QUuid& dbUuid, QByteArray& passwordKey)
     return true;
 }
 
-bool TouchID::hasKey(const QUuid& dbUuid) const
+bool TouchID::hasSessionKey(const QUuid& dbUuid) const
 {
     return m_encryptedMasterKeys.contains(dbUuid);
 }
@@ -414,14 +457,4 @@ bool TouchID::isAvailable() const
    // is dynamic in its nature. User can close the laptop lid or take off
    // the watch, thus making one (or both) of the authentication types unavailable.
    return  isWatchAvailable() || isTouchIdAvailable() || isPasswordFallbackPossible();
-}
-
-/**
- * Resets the inner state either for all or for the given database
- */
-void TouchID::reset(const QUuid& dbUuid)
-{
-    if (!dbUuid.isNull()) {
-        m_encryptedMasterKeys.remove(dbUuid);
-    }
 }

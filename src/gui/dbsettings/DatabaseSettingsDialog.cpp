@@ -20,6 +20,7 @@
 #include "DatabaseSettingsWidgetDatabaseKey.h"
 #include "DatabaseSettingsWidgetEncryption.h"
 #include "DatabaseSettingsWidgetGeneral.h"
+#include "DatabaseSettingsWidgetQuickUnlock.h"
 #ifdef KPXC_FEATURE_BROWSER
 #include "DatabaseSettingsWidgetBrowser.h"
 #endif
@@ -44,6 +45,7 @@ DatabaseSettingsDialog::DatabaseSettingsDialog(QWidget* parent)
     , m_securityTabWidget(new QTabWidget(this))
     , m_databaseKeyWidget(new DatabaseSettingsWidgetDatabaseKey(this))
     , m_encryptionWidget(new DatabaseSettingsWidgetEncryption(this))
+    , m_quickUnlockWidget(new DatabaseSettingsWidgetQuickUnlock(this))
 #ifdef KPXC_FEATURE_BROWSER
     , m_browserWidget(new DatabaseSettingsWidgetBrowser(this))
 #endif
@@ -60,17 +62,26 @@ DatabaseSettingsDialog::DatabaseSettingsDialog(QWidget* parent)
     addPage(tr("General"), icons()->icon("preferences-other"), m_generalWidget);
     addPage(tr("Security"), icons()->icon("security-high"), m_securityTabWidget);
 
-    auto* scrollArea = new QScrollArea(parent);
-    scrollArea->setFrameShape(QFrame::NoFrame);
-    scrollArea->setFrameShadow(QFrame::Plain);
-    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scrollArea->setSizeAdjustPolicy(QScrollArea::AdjustToContents);
-    scrollArea->setWidgetResizable(true);
-    scrollArea->setWidget(m_databaseKeyWidget);
+    auto* credentialsScrollArea = new QScrollArea(parent);
+    credentialsScrollArea->setFrameShape(QFrame::NoFrame);
+    credentialsScrollArea->setFrameShadow(QFrame::Plain);
+    credentialsScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    credentialsScrollArea->setSizeAdjustPolicy(QScrollArea::AdjustIgnored);
+    credentialsScrollArea->setWidgetResizable(true);
+    credentialsScrollArea->setWidget(m_databaseKeyWidget);
+
+    auto* quickUnlockScrollArea = new QScrollArea(parent);
+    quickUnlockScrollArea->setFrameShape(QFrame::NoFrame);
+    quickUnlockScrollArea->setFrameShadow(QFrame::Plain);
+    quickUnlockScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    quickUnlockScrollArea->setSizeAdjustPolicy(QScrollArea::AdjustIgnored);
+    quickUnlockScrollArea->setWidgetResizable(true);
+    quickUnlockScrollArea->setWidget(m_quickUnlockWidget);
 
     m_securityTabWidget->setObjectName("securityTabWidget");
-    m_securityTabWidget->addTab(scrollArea, tr("Database Credentials"));
+    m_securityTabWidget->addTab(credentialsScrollArea, tr("Database Credentials"));
     m_securityTabWidget->addTab(m_encryptionWidget, tr("Encryption Settings"));
+    m_securityTabWidget->addTab(quickUnlockScrollArea, tr("Quick Unlock"));
 
     m_securityTabWidget->setCurrentIndex(0);
 
@@ -100,14 +111,15 @@ void DatabaseSettingsDialog::load(const QSharedPointer<Database>& db)
     setHeadline(tr("Database Settings: %1").arg(db->canonicalFilePath()));
 
     if (auto* dbWidget = qobject_cast<DatabaseWidget*>(parent())) {
-        m_databaseKeyWidget->setSaveDatabaseCallback([dbWidget]() { return dbWidget->save(); });
-        m_databaseKeyWidget->setShowMessageCallback(
+        m_quickUnlockWidget->setSaveDatabaseCallback([dbWidget]() { return dbWidget->save(); });
+        m_quickUnlockWidget->setShowMessageCallback(
             [dbWidget](const QString& text, KMessageWidget::MessageType type) { dbWidget->showMessage(text, type); });
     }
 
     m_generalWidget->loadSettings(db);
     m_databaseKeyWidget->loadSettings(db);
     m_encryptionWidget->loadSettings(db);
+    m_quickUnlockWidget->loadSettings(db);
     m_remoteWidget->loadSettings(db);
 #ifdef KPXC_FEATURE_BROWSER
     m_browserWidget->loadSettings(db);
@@ -154,6 +166,12 @@ void DatabaseSettingsDialog::save()
         return;
     }
 
+    if (!m_quickUnlockWidget->saveSettings()) {
+        setCurrentPage(1);
+        m_securityTabWidget->setCurrentIndex(2);
+        return;
+    }
+
     if (!m_remoteWidget->saveSettings()) {
         setCurrentPage(2);
         return;
@@ -174,6 +192,7 @@ void DatabaseSettingsDialog::reject()
     m_generalWidget->discard();
     m_databaseKeyWidget->discard();
     m_encryptionWidget->discard();
+    m_quickUnlockWidget->discard();
     m_remoteWidget->discard();
 #ifdef KPXC_FEATURE_BROWSER
     m_browserWidget->discard();

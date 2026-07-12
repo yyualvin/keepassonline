@@ -22,8 +22,8 @@
 #include "TouchID.h"
 #define QUICKUNLOCK_IMPLEMENTATION TouchID
 #elif defined(Q_CC_MSVC)
-#include "WindowsHello.h"
-#define QUICKUNLOCK_IMPLEMENTATION WindowsHello
+#include "PasskeyQuickUnlock.h"
+#define QUICKUNLOCK_IMPLEMENTATION PasskeyQuickUnlock
 #elif defined(Q_OS_LINUX)
 #include "Polkit.h"
 #define QUICKUNLOCK_IMPLEMENTATION Polkit
@@ -41,6 +41,11 @@ QuickUnlockInterface* getQuickUnlock()
     return quickUnlockInstance;
 }
 
+void QuickUnlockInterface::clearSessionStorage(const QSharedPointer<Database>& db)
+{
+    Q_UNUSED(db);
+}
+
 bool NoQuickUnlock::isAvailable() const
 {
     return false;
@@ -51,31 +56,33 @@ QString NoQuickUnlock::errorString() const
     return QObject::tr("No Quick Unlock provider is available");
 }
 
-void NoQuickUnlock::reset()
+bool NoQuickUnlock::hasKey(const QSharedPointer<Database>& db) const
 {
-}
-
-bool NoQuickUnlock::setKey(const QUuid& dbUuid, const QByteArray& key)
-{
-    Q_UNUSED(dbUuid)
-    Q_UNUSED(key)
+    Q_UNUSED(db);
     return false;
 }
 
-bool NoQuickUnlock::getKey(const QUuid& dbUuid, QByteArray& key)
+bool NoQuickUnlock::storeKey(const QSharedPointer<Database>& db, void* parentWindow, QString* error)
 {
-    Q_UNUSED(dbUuid)
-    Q_UNUSED(key)
+    Q_UNUSED(db);
+    Q_UNUSED(parentWindow);
+    Q_UNUSED(error);
     return false;
 }
 
-bool NoQuickUnlock::hasKey(const QUuid& dbUuid) const
+bool NoQuickUnlock::retrieveKey(const QSharedPointer<Database>& db,
+                                QByteArray& serializedKey,
+                                void* parentWindow,
+                                QString* error)
 {
-    Q_UNUSED(dbUuid)
+    Q_UNUSED(db);
+    Q_UNUSED(serializedKey);
+    Q_UNUSED(parentWindow);
+    Q_UNUSED(error);
     return false;
 }
 
-void NoQuickUnlock::reset(const QUuid& dbUuid)
+void NoQuickUnlock::reset(const QSharedPointer<Database>& db)
 {
-    Q_UNUSED(dbUuid)
+    Q_UNUSED(db);
 }

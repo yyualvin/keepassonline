@@ -179,7 +179,6 @@ set(gui_SOURCES
         gui/databasekey/PasskeyUnlockEditWidget.cpp
         gui/databasekey/YubiKeyEditWidget.cpp
         gui/databasekey/KeyFileEditWidget.cpp
-        gui/passkeyunlock/PasskeyQuickUnlockUi.cpp
         gui/dbsettings/DatabaseSettingsWidget.cpp
         gui/dbsettings/DatabaseSettingsDialog.cpp
         gui/dbsettings/DatabaseSettingsWidgetGeneral.cpp
@@ -187,6 +186,7 @@ set(gui_SOURCES
         gui/dbsettings/DatabaseSettingsWidgetMetaDataSimple.cpp
         gui/dbsettings/DatabaseSettingsWidgetEncryption.cpp
         gui/dbsettings/DatabaseSettingsWidgetDatabaseKey.cpp
+        gui/dbsettings/DatabaseSettingsWidgetQuickUnlock.cpp
         gui/remote/DatabaseSettingsWidgetRemote.cpp
         gui/remote/RemoteHandler.cpp
         gui/remote/RemoteProcess.cpp
@@ -293,7 +293,7 @@ if(WIN32)
             gui/osutils/winutils/ScreenLockListenerWin.cpp
             gui/osutils/winutils/WinUtils.cpp)
     if (WINSDK)
-        list(APPEND gui_SOURCES quickunlock/WindowsHello.cpp)
+        list(APPEND gui_SOURCES quickunlock/PasskeyQuickUnlock.cpp)
     endif()
     list(APPEND core_SOURCES
             core/SecurityPromptFocusWin.cpp

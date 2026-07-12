@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2023 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,22 +15,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KEEPASSXC_POLKIT_H
-#define KEEPASSXC_POLKIT_H
+#ifndef KEEPASSXC_PASSKEYQUICKUNLOCK_H
+#define KEEPASSXC_PASSKEYQUICKUNLOCK_H
 
 #include "QuickUnlockInterface.h"
-#include "polkit_dbus.h"
-#include <QHash>
-#include <QScopedPointer>
 
-class Polkit : public QuickUnlockInterface
+class PasskeyQuickUnlock : public QuickUnlockInterface
 {
 public:
-    Polkit();
-    ~Polkit() override;
-
     bool isAvailable() const override;
     QString errorString() const override;
+    bool needsSaveAfterStore() const override;
 
     bool hasKey(const QSharedPointer<Database>& db) const override;
     bool storeKey(const QSharedPointer<Database>& db, void* parentWindow, QString* error = nullptr) override;
@@ -39,19 +34,9 @@ public:
                      void* parentWindow,
                      QString* error = nullptr) override;
     void reset(const QSharedPointer<Database>& db) override;
-    void clearSessionStorage(const QSharedPointer<Database>& db) override;
 
 private:
-    bool setSessionKey(const QUuid& dbUuid, const QByteArray& key);
-    bool getSessionKey(const QUuid& dbUuid, QByteArray& key);
-    bool hasSessionKey(const QUuid& dbUuid) const;
-    void clearSessionKey(const QUuid& dbUuid);
-
-    bool m_available;
     QString m_error;
-    QHash<QUuid, QByteArray> m_encryptedMasterKeys;
-
-    QScopedPointer<org::freedesktop::PolicyKit1::Authority> m_polkit;
 };
 
-#endif // KEEPASSXC_POLKIT_H
+#endif // KEEPASSXC_PASSKEYQUICKUNLOCK_H

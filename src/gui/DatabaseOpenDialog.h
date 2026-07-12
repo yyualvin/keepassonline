@@ -53,6 +53,7 @@ public:
     QSharedPointer<Database> database() const;
     void clearForms();
     void showMessage(const QString& text, MessageWidget::MessageType type, int autoHideTimeout);
+    bool quickUnlockPendingSave() const;
 
 signals:
     void dialogFinished(bool accepted, DatabaseWidget* dbWidget);
