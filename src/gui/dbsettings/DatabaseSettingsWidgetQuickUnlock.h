@@ -19,7 +19,6 @@
 #define KEEPASSXC_DATABASESETTINGSWIDGETQUICKUNLOCK_H
 
 #include "DatabaseSettingsWidget.h"
-#include "gui/KMessageWidget.h"
 
 #include <QPointer>
 #include <functional>
@@ -38,7 +37,6 @@ public:
     void loadSettings(QSharedPointer<Database> db) override;
 
     void setSaveDatabaseCallback(const std::function<bool()>& callback);
-    void setShowMessageCallback(const std::function<void(const QString&, KMessageWidget::MessageType)>& callback);
 
 public slots:
     void initialize() override;

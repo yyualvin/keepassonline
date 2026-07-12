@@ -51,6 +51,7 @@ KeyComponentWidget::KeyComponentWidget(QWidget* parent)
     bool prev = m_ui->stackedWidget->blockSignals(true);
     m_ui->stackedWidget->setCurrentIndex(Page::AddNew);
     m_ui->stackedWidget->blockSignals(prev);
+    updateSize();
 }
 
 KeyComponentWidget::~KeyComponentWidget() = default;

@@ -26,12 +26,12 @@ DatabaseSettingsWidgetQuickUnlock::DatabaseSettingsWidgetQuickUnlock(QWidget* pa
     : DatabaseSettingsWidget(parent)
     , m_passkeyUnlockEditWidget(new PasskeyUnlockEditWidget(this))
 {
-    auto* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSizeConstraint(QLayout::SetNoConstraint);
-    layout->addWidget(m_passkeyUnlockEditWidget);
-    layout->addStretch();
-    setLayout(layout);
+    auto* vbox = new QVBoxLayout(this);
+    vbox->setSizeConstraint(QLayout::SetNoConstraint);
+    vbox->setSpacing(20);
+    vbox->addWidget(m_passkeyUnlockEditWidget);
+    vbox->addStretch();
+    setLayout(vbox);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 }
 
@@ -40,12 +40,6 @@ DatabaseSettingsWidgetQuickUnlock::~DatabaseSettingsWidgetQuickUnlock() = defaul
 void DatabaseSettingsWidgetQuickUnlock::setSaveDatabaseCallback(const std::function<bool()>& callback)
 {
     m_passkeyUnlockEditWidget->setSaveDatabaseCallback(callback);
-}
-
-void DatabaseSettingsWidgetQuickUnlock::setShowMessageCallback(
-    const std::function<void(const QString&, KMessageWidget::MessageType)>& callback)
-{
-    m_passkeyUnlockEditWidget->setShowMessageCallback(callback);
 }
 
 void DatabaseSettingsWidgetQuickUnlock::loadSettings(QSharedPointer<Database> db)

@@ -20,8 +20,6 @@
 
 #include "KeyComponentWidget.h"
 
-#include "gui/KMessageWidget.h"
-
 #include <functional>
 
 class Database;
@@ -39,7 +37,6 @@ public:
     void refreshState();
 
     void setSaveDatabaseCallback(const std::function<bool()>& callback);
-    void setShowMessageCallback(const std::function<void(const QString&, KMessageWidget::MessageType)>& callback);
 
     bool addToCompositeKey(QSharedPointer<CompositeKey> key) override;
     bool validate(QString& errorMessage) const override;
@@ -54,11 +51,8 @@ private slots:
     void disablePasskeyQuickUnlock();
 
 private:
-    void showMessage(const QString& text, KMessageWidget::MessageType type);
-
     QSharedPointer<Database> m_db;
     std::function<bool()> m_saveDatabaseCallback;
-    std::function<void(const QString&, KMessageWidget::MessageType)> m_showMessageCallback;
 };
 
 #endif // KEEPASSXC_PASSKEYUNLOCKEDITWIDGET_H

@@ -56,12 +56,6 @@ void PasskeyUnlockEditWidget::setSaveDatabaseCallback(const std::function<bool()
     m_saveDatabaseCallback = callback;
 }
 
-void PasskeyUnlockEditWidget::setShowMessageCallback(
-    const std::function<void(const QString&, KMessageWidget::MessageType)>& callback)
-{
-    m_showMessageCallback = callback;
-}
-
 bool PasskeyUnlockEditWidget::addToCompositeKey(QSharedPointer<CompositeKey> key)
 {
     Q_UNUSED(key);
@@ -94,7 +88,8 @@ void PasskeyUnlockEditWidget::initComponent()
     m_ui->componentDescription->setText(
         tr("<p>Quick unlock lets you unlock this database without entering your full credentials.</p>"
            "<p>On Windows, the database key is wrapped and stored in the database file using a passkey. "
-           "On other platforms, quick unlock is kept for the current session only.</p>"));
+           "On other platforms, quick unlock is kept for the current session only.</p>"
+           "<p>Quick unlock can also be set up automatically when enabled in the application settings.</p>"));
 }
 
 void PasskeyUnlockEditWidget::enablePasskeyQuickUnlock()
@@ -106,21 +101,26 @@ void PasskeyUnlockEditWidget::enablePasskeyQuickUnlock()
     QString error;
     const auto parentWindow = reinterpret_cast<void*>(window()->winId());
     if (!getQuickUnlock()->storeKey(m_db, parentWindow, &error)) {
-        showMessage(error.isEmpty() ? tr("Failed to enable quick unlock.") : error, KMessageWidget::Error);
+        MessageBox::critical(this,
+                             tr("Quick Unlock"),
+                             error.isEmpty() ? tr("Failed to enable quick unlock.") : error,
+                             MessageBox::Ok);
         refreshState();
         return;
     }
 
     if (getQuickUnlock()->needsSaveAfterStore()) {
         if (!m_saveDatabaseCallback || !m_saveDatabaseCallback()) {
-            showMessage(tr("Quick unlock was configured but saving the database failed."), KMessageWidget::Warning);
+            MessageBox::warning(this,
+                                tr("Quick Unlock"),
+                                tr("Quick unlock was configured but saving the database failed."),
+                                MessageBox::Ok);
             refreshState();
             return;
         }
     }
 
     refreshState();
-    showMessage(tr("Quick unlock enabled."), KMessageWidget::Positive);
 }
 
 void PasskeyUnlockEditWidget::disablePasskeyQuickUnlock()
@@ -145,19 +145,14 @@ void PasskeyUnlockEditWidget::disablePasskeyQuickUnlock()
 
     if (getQuickUnlock()->needsSaveAfterStore()) {
         if (!m_saveDatabaseCallback || !m_saveDatabaseCallback()) {
-            showMessage(tr("Quick unlock was removed but saving the database failed."), KMessageWidget::Warning);
+            MessageBox::warning(this,
+                                tr("Quick Unlock"),
+                                tr("Quick unlock was removed but saving the database failed."),
+                                MessageBox::Ok);
             refreshState();
             return;
         }
     }
 
     refreshState();
-    showMessage(tr("Quick unlock removed."), KMessageWidget::Positive);
-}
-
-void PasskeyUnlockEditWidget::showMessage(const QString& text, KMessageWidget::MessageType type)
-{
-    if (m_showMessageCallback) {
-        m_showMessageCallback(text, type);
-    }
 }

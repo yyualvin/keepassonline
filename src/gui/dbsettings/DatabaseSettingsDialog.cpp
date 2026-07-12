@@ -112,8 +112,6 @@ void DatabaseSettingsDialog::load(const QSharedPointer<Database>& db)
 
     if (auto* dbWidget = qobject_cast<DatabaseWidget*>(parent())) {
         m_quickUnlockWidget->setSaveDatabaseCallback([dbWidget]() { return dbWidget->save(); });
-        m_quickUnlockWidget->setShowMessageCallback(
-            [dbWidget](const QString& text, KMessageWidget::MessageType type) { dbWidget->showMessage(text, type); });
     }
 
     m_generalWidget->loadSettings(db);
