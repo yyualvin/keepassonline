@@ -59,7 +59,7 @@
         </font>
        </property>
        <property name="text">
-        <string notr="true">&lt;span style=&quot;font-size: 20pt&quot;&gt; KeePassXC ${VERSION}&lt;/span&gt;</string>
+        <string notr="true">&lt;span style=&quot;font-size: 20pt&quot;&gt; KeePassOnline&lt;/span&gt;</string>
        </property>
        <property name="margin">
         <number>0</number>
